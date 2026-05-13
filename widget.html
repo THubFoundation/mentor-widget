@@ -14,7 +14,6 @@
 }
 html,body{font-family:'Lato',sans-serif;font-size:13px;background:#fff;color:var(--text);line-height:1.4}
 #root{width:100%;position:relative}
-/* States */
 .state{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:32px 16px;gap:8px;text-align:center}
 .spinner{width:24px;height:24px;border:2px solid #ddd;border-top-color:var(--accent);border-radius:50%;animation:spin .75s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
@@ -22,7 +21,6 @@ html,body{font-family:'Lato',sans-serif;font-size:13px;background:#fff;color:var
 .s-sub{color:var(--muted);font-size:12px}
 .retry{margin-top:6px;padding:6px 16px;background:var(--accent);color:#fff;border:none;border-radius:var(--r);font-size:12px;cursor:pointer;font-family:inherit}
 .retry:hover{background:var(--accent-h)}
-/* Table */
 .tbl-wrap{width:100%;overflow-x:auto;border:1px solid var(--border);border-radius:4px}
 table{width:100%;border-collapse:collapse;table-layout:fixed}
 .c-chk{width:36px}.c-name{width:22%}.c-score{width:70px}.c-reason{width:auto}.c-startup{width:16%}.c-mentor{width:11%}.c-action{width:115px}
@@ -45,7 +43,6 @@ td:last-child{border-right:none}
 .badge{display:inline-block;font-size:11px;font-weight:600;padding:2px 8px;border-radius:10px}
 .badge.accepted{background:#e6f4ea;color:var(--success)}
 .badge.declined{background:#fce8e6;color:var(--danger)}
-/* Split button */
 .act{display:flex;align-items:center}
 .btn-acc{padding:5px 12px;background:var(--accent);color:#fff;border:1px solid var(--accent);border-right:none;border-radius:var(--r) 0 0 var(--r);font-size:12px;font-weight:600;font-family:inherit;cursor:pointer;white-space:nowrap;line-height:1.6;display:flex;align-items:center;gap:4px;transition:background .15s}
 .btn-acc:hover:not(:disabled){background:var(--accent-h);border-color:var(--accent-h)}
@@ -54,16 +51,13 @@ td:last-child{border-right:none}
 .btn-arr:hover:not(:disabled){background:var(--accent-h)}
 .btn-arr:disabled{opacity:.5;cursor:not-allowed}
 .btn-spin{display:none;width:11px;height:11px;border:1.5px solid rgba(255,255,255,.5);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite}
-/* Dropdown */
 .dd{position:fixed;background:#fff;border:1px solid var(--border);border-radius:3px;box-shadow:0 4px 12px rgba(0,0,0,.12);z-index:9999;min-width:110px;padding:4px 0}
 .dd-item{padding:8px 14px;font-size:13px;cursor:pointer;color:var(--text)}
 .dd-item:hover{background:#f5f5f5;color:var(--danger)}
-/* Toast */
 .toast{position:fixed;bottom:18px;left:50%;transform:translateX(-50%) translateY(12px);background:#323232;color:#fff;padding:8px 18px;border-radius:4px;font-size:13px;display:flex;align-items:center;gap:8px;box-shadow:0 4px 14px rgba(0,0,0,.2);opacity:0;transition:all .25s;z-index:10000;pointer-events:none}
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
 .toast.success{background:var(--success)}
 .toast.error{background:var(--danger)}
-/* Modal */
 .overlay{position:fixed;inset:0;background:rgba(0,0,0,.35);display:flex;align-items:center;justify-content:center;z-index:9998}
 .modal{background:#fff;border-radius:6px;padding:28px 24px 22px;width:320px;max-width:90vw;box-shadow:0 8px 32px rgba(0,0,0,.18);text-align:center}
 .m-icon{width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 12px;font-size:20px}
@@ -128,7 +122,6 @@ td:last-child{border-right:none}
 
 <script src="https://js.zohostatic.com/zohocrm/sdk/2.0/ZohoCRMWidget.js"></script>
 <script>
-/* ── CONFIG — update these to match your CRM ── */
 const CONFIG = {
   SUGGESTION_MODULE: "Mentor_AI_Suggestions",
   FIELDS: {
@@ -160,13 +153,18 @@ document.addEventListener("click", e => {
   if (!e.target.closest(".btn-arr") && !e.target.closest("#dd")) closeDD();
 });
 
-document.addEventListener("DOMContentLoaded", () => {
-  ZOHO.embeddedApp.on("PageLoad", d => {
-    progId   = d.EntityId;
-    progName = d.EntityName || "";
-    initWidget();
-  });
-  ZOHO.embeddedApp.init();
+// Boot — wait for ZOHO SDK then listen for PageLoad
+window.addEventListener("load", function () {
+  try {
+    ZOHO.embeddedApp.on("PageLoad", function(data) {
+      progId   = data.EntityId;
+      progName = data.EntityName || "";
+      initWidget();
+    });
+    ZOHO.embeddedApp.init();
+  } catch(e) {
+    showErr("SDK failed to initialize: " + e.message);
+  }
 });
 
 async function initWidget() {
@@ -175,8 +173,7 @@ async function initWidget() {
     const recs = await fetchRecs();
     renderTable(recs);
   } catch(e) {
-    document.getElementById("err-msg").textContent = e.message || "Error loading data.";
-    show("error");
+    showErr(e.message || "Error loading data.");
   }
 }
 
@@ -191,8 +188,12 @@ async function fetchRecs() {
 
 function renderTable(recs) {
   if (!recs.length) { show("empty"); return; }
-  const ord = {pending:0,accepted:1,declined:2};
-  recs.sort((a,b) => (ord[(a[CONFIG.FIELDS.status]||"").toLowerCase()]??9) - (ord[(b[CONFIG.FIELDS.status]||"").toLowerCase()]??9));
+  const ord = {pending:0, accepted:1, declined:2};
+  recs.sort((a,b) => {
+    const sa = (a[CONFIG.FIELDS.status]||"").toLowerCase();
+    const sb = (b[CONFIG.FIELDS.status]||"").toLowerCase();
+    return (ord[sa]??9) - (ord[sb]??9);
+  });
   const tb = document.getElementById("tbody");
   tb.innerHTML = "";
   recs.forEach(r => tb.appendChild(buildRow(r)));
@@ -266,10 +267,10 @@ async function confirmAction() {
   const ab = row.querySelector(".btn-acc");
   const ar = row.querySelector(".btn-arr");
   const sp = row.querySelector(".btn-spin");
-  if (ab) { ab.disabled = true; if(sp) sp.style.display="inline-block"; }
-  if (ar) ar.disabled = true;
+  if (ab) { ab.disabled=true; if(sp) sp.style.display="inline-block"; }
+  if (ar) ar.disabled=true;
   try {
-    if (type === "accept") await doAccept(id, row);
+    if (type==="accept") await doAccept(id, row);
     else await doDecline(id, row);
   } catch(e) {
     toast("error", "Failed: " + (e.message||"Unknown error"));
@@ -301,10 +302,10 @@ async function doDecline(id, row) {
 
 async function updStatus(id, val) {
   const r = await ZOHO.CRM.API.updateRecord({
-    Entity: CONFIG.SUGGESTION_MODULE,
+    Entity:  CONFIG.SUGGESTION_MODULE,
     APIData: { data:[{ id, [CONFIG.FIELDS.status]: val }] },
   });
-  if (r?.data?.[0]?.status === "error") throw new Error("Update failed.");
+  if (r?.data?.[0]?.status === "error") throw new Error("Status update failed.");
 }
 
 function buildRec(s) {
@@ -336,6 +337,11 @@ function show(n) {
   if (n==="table") document.getElementById("tbl-wrap").classList.remove("hidden");
 }
 
+function showErr(msg) {
+  document.getElementById("err-msg").textContent = msg;
+  show("error");
+}
+
 let tt;
 function toast(type, msg) {
   const el = document.getElementById("toast");
@@ -347,14 +353,14 @@ function toast(type, msg) {
   tt = setTimeout(() => { el.classList.remove("show"); setTimeout(()=>el.classList.add("hidden"),300); }, 3500);
 }
 
-function openModal({type,title,body,ok}) {
+function openModal({type, title, body, ok}) {
   document.getElementById("m-title").textContent = title;
   document.getElementById("m-body").innerHTML    = body;
   const ic = document.getElementById("m-icon");
-  ic.className   = "m-icon "+type;
-  ic.textContent = type==="accept"?"✓":"✕";
+  ic.className   = "m-icon " + type;
+  ic.textContent = type==="accept" ? "✓" : "✕";
   const ob = document.getElementById("m-ok");
-  ob.className   = "m-btn ok "+type;
+  ob.className   = "m-btn ok " + type;
   ob.textContent = ok;
   document.getElementById("overlay").classList.remove("hidden");
 }
