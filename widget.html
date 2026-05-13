@@ -5,371 +5,44 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>Mentor AI Suggestions</title>
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Lato:wght@400;600;700&display=swap');
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-:root{
-  --border:#e0e0e0;--border-light:#efefef;--text:#1a1a1a;--text2:#444;
-  --muted:#888;--th-bg:#f5f5f5;--hover:#f9f9f9;--accent:#0076c6;
-  --accent-h:#005fa3;--danger:#d93025;--success:#2e7d32;--r:3px;
-}
-html,body{font-family:'Lato',sans-serif;font-size:13px;background:#fff;color:var(--text);line-height:1.4}
-#root{width:100%;position:relative}
-.state{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:32px 16px;gap:8px;text-align:center}
-.spinner{width:24px;height:24px;border:2px solid #ddd;border-top-color:var(--accent);border-radius:50%;animation:spin .75s linear infinite}
-@keyframes spin{to{transform:rotate(360deg)}}
-.s-title{color:var(--text2);font-size:13px}
-.s-sub{color:var(--muted);font-size:12px}
-.retry{margin-top:6px;padding:6px 16px;background:var(--accent);color:#fff;border:none;border-radius:var(--r);font-size:12px;cursor:pointer;font-family:inherit}
-.retry:hover{background:var(--accent-h)}
-.tbl-wrap{width:100%;overflow-x:auto;border:1px solid var(--border);border-radius:4px}
-table{width:100%;border-collapse:collapse;table-layout:fixed}
-.c-chk{width:36px}.c-name{width:22%}.c-score{width:70px}.c-reason{width:auto}.c-startup{width:16%}.c-mentor{width:11%}.c-action{width:115px}
-thead tr{background:var(--th-bg);border-bottom:1px solid var(--border)}
-th{padding:9px 10px;text-align:left;font-size:12px;font-weight:700;color:#333;white-space:nowrap;border-right:1px solid var(--border-light);user-select:none}
-th:last-child{border-right:none}
-.th-f{font-size:11px;color:var(--accent);margin-left:4px;font-weight:400;cursor:pointer}
-tbody tr{border-bottom:1px solid var(--border-light);transition:background .1s}
-tbody tr:last-child{border-bottom:none}
-tbody tr:hover{background:var(--hover)}
-tbody tr.r-accepted{background:#f0fff4}
-tbody tr.r-declined{background:#fafafa;opacity:.7}
-td{padding:10px;font-size:13px;color:var(--text);vertical-align:top;border-right:1px solid var(--border-light);word-break:break-word}
-td:last-child{border-right:none}
-.c-chk input{cursor:pointer;width:14px;height:14px;accent-color:var(--accent)}
-.td-name{color:var(--accent);font-weight:500;cursor:pointer}
-.td-name:hover{text-decoration:underline}
-.td-score{font-weight:600;text-align:center}
-.td-reason{color:var(--text2);line-height:1.5;font-size:12px}
-.badge{display:inline-block;font-size:11px;font-weight:600;padding:2px 8px;border-radius:10px}
-.badge.accepted{background:#e6f4ea;color:var(--success)}
-.badge.declined{background:#fce8e6;color:var(--danger)}
-.act{display:flex;align-items:center}
-.btn-acc{padding:5px 12px;background:var(--accent);color:#fff;border:1px solid var(--accent);border-right:none;border-radius:var(--r) 0 0 var(--r);font-size:12px;font-weight:600;font-family:inherit;cursor:pointer;white-space:nowrap;line-height:1.6;display:flex;align-items:center;gap:4px;transition:background .15s}
-.btn-acc:hover:not(:disabled){background:var(--accent-h);border-color:var(--accent-h)}
-.btn-acc:disabled{opacity:.5;cursor:not-allowed}
-.btn-arr{padding:5px 7px;background:var(--accent);color:#fff;border:1px solid var(--accent);border-left:1px solid rgba(255,255,255,.35);border-radius:0 var(--r) var(--r) 0;font-size:10px;cursor:pointer;line-height:1.6;display:flex;align-items:center;transition:background .15s}
-.btn-arr:hover:not(:disabled){background:var(--accent-h)}
-.btn-arr:disabled{opacity:.5;cursor:not-allowed}
-.btn-spin{display:none;width:11px;height:11px;border:1.5px solid rgba(255,255,255,.5);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite}
-.dd{position:fixed;background:#fff;border:1px solid var(--border);border-radius:3px;box-shadow:0 4px 12px rgba(0,0,0,.12);z-index:9999;min-width:110px;padding:4px 0}
-.dd-item{padding:8px 14px;font-size:13px;cursor:pointer;color:var(--text)}
-.dd-item:hover{background:#f5f5f5;color:var(--danger)}
-.toast{position:fixed;bottom:18px;left:50%;transform:translateX(-50%) translateY(12px);background:#323232;color:#fff;padding:8px 18px;border-radius:4px;font-size:13px;display:flex;align-items:center;gap:8px;box-shadow:0 4px 14px rgba(0,0,0,.2);opacity:0;transition:all .25s;z-index:10000;pointer-events:none}
-.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
-.toast.success{background:var(--success)}
-.toast.error{background:var(--danger)}
-.overlay{position:fixed;inset:0;background:rgba(0,0,0,.35);display:flex;align-items:center;justify-content:center;z-index:9998}
-.modal{background:#fff;border-radius:6px;padding:28px 24px 22px;width:320px;max-width:90vw;box-shadow:0 8px 32px rgba(0,0,0,.18);text-align:center}
-.m-icon{width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 12px;font-size:20px}
-.m-icon.accept{background:#e6f4ea;color:var(--success)}
-.m-icon.decline{background:#fce8e6;color:var(--danger)}
-.m-title{font-size:15px;font-weight:700;color:var(--text);margin-bottom:8px}
-.m-body{font-size:13px;color:var(--text2);margin-bottom:20px;line-height:1.55}
-.m-actions{display:flex;gap:8px}
-.m-btn{flex:1;padding:9px;border-radius:var(--r);font-size:13px;font-weight:600;font-family:inherit;cursor:pointer;border:1px solid;transition:background .15s}
-.m-btn.cancel{background:#fff;color:var(--text2);border-color:var(--border)}
-.m-btn.cancel:hover{background:#f5f5f5}
-.m-btn.ok{background:var(--accent);color:#fff;border-color:var(--accent)}
-.m-btn.ok.accept{background:var(--success);border-color:var(--success)}
-.m-btn.ok.decline{background:var(--danger);border-color:var(--danger)}
-.m-btn.ok:hover{opacity:.88}
-.hidden{display:none!important}
+body{font-family:sans-serif;font-size:13px;background:#fff;padding:16px}
+#debug{background:#f5f5f5;border:1px solid #ddd;border-radius:4px;padding:12px;margin-bottom:16px;font-size:11px;font-family:monospace;white-space:pre-wrap;max-height:200px;overflow-y:auto}
+#debug .ok{color:green} #debug .err{color:red} #debug .info{color:#0076c6}
 </style>
 </head>
 <body>
-<div id="root">
-  <div id="s-load" class="state"><div class="spinner"></div><p class="s-sub">Loading suggestions...</p></div>
-  <div id="s-empty" class="state hidden"><p class="s-title">No mentor suggestions found.</p></div>
-  <div id="s-error" class="state hidden">
-    <p class="s-title">Something went wrong</p>
-    <p id="err-msg" class="s-sub"></p>
-    <button class="retry" onclick="initWidget()">Retry</button>
-  </div>
-  <div id="tbl-wrap" class="tbl-wrap hidden">
-    <table>
-      <thead>
-        <tr>
-          <th class="c-chk"><input type="checkbox" id="chk-all"/></th>
-          <th class="c-name">Mentor AI Suggestion Name <span class="th-f">All ▾</span></th>
-          <th class="c-score">AI Score</th>
-          <th class="c-reason">Reason</th>
-          <th class="c-startup">Startup Name</th>
-          <th class="c-mentor">Mentor</th>
-          <th class="c-action"></th>
-        </tr>
-      </thead>
-      <tbody id="tbody"></tbody>
-    </table>
-  </div>
-  <div id="toast" class="toast hidden"><span id="t-icon"></span><span id="t-msg"></span></div>
-</div>
 
-<div id="dd" class="dd hidden">
-  <div class="dd-item" id="dd-decline">Decline</div>
-</div>
-
-<div id="overlay" class="overlay hidden">
-  <div class="modal">
-    <div class="m-icon" id="m-icon"></div>
-    <h3 class="m-title" id="m-title"></h3>
-    <p class="m-body" id="m-body"></p>
-    <div class="m-actions">
-      <button class="m-btn cancel" onclick="closeModal()">Cancel</button>
-      <button class="m-btn ok" id="m-ok" onclick="confirmAction()">Confirm</button>
-    </div>
-  </div>
-</div>
+<div id="debug">Initializing...\n</div>
 
 <script src="https://js.zohostatic.com/zohocrm/sdk/2.0/ZohoCRMWidget.js"></script>
 <script>
-const CONFIG = {
-  SUGGESTION_MODULE: "Mentor_AI_Suggestions",
-  FIELDS: {
-    name:         "Name",
-    mentor_name:  "Mentor_Name",
-    score:        "Score",
-    reason:       "Reason",
-    startup:      "Startup",
-    startup_name: "Startup_Name",
-    status:       "Status",
-  },
-  PROGRAM_LOOKUP_FIELD: "Program",
-  STATUS: { pending:"Pending", accepted:"Accepted", declined:"Declined" },
-  RECORD_MODULE: "Mentorships",
-  RECORD_FIELDS: {
-    "Name":              "Mentorship - {{suggestion.mentor_name}}",
-    "Mentor_Name":       "{{suggestion.mentor_name}}",
-    "Startup_Name":      "{{suggestion.startup_name}}",
-    "Program":           "{{program.id}}",
-    "Score":             "{{suggestion.score}}",
-    "Status":            "Active",
-    "Source_Suggestion": "{{suggestion.id}}",
-  },
-};
-
-let progId = null, progName = null, pending = null, ddRow = null;
-
-document.addEventListener("click", e => {
-  if (!e.target.closest(".btn-arr") && !e.target.closest("#dd")) closeDD();
-});
-
-// Boot — wait for ZOHO SDK then listen for PageLoad
-window.addEventListener("load", function () {
-  try {
-    ZOHO.embeddedApp.on("PageLoad", function(data) {
-      progId   = data.EntityId;
-      progName = data.EntityName || "";
-      initWidget();
-    });
-    ZOHO.embeddedApp.init();
-  } catch(e) {
-    showErr("SDK failed to initialize: " + e.message);
-  }
-});
-
-async function initWidget() {
-  show("load");
-  try {
-    const recs = await fetchRecs();
-    renderTable(recs);
-  } catch(e) {
-    showErr(e.message || "Error loading data.");
-  }
+function log(msg, type) {
+  const d = document.getElementById("debug");
+  const line = document.createElement("div");
+  line.className = type || "info";
+  line.textContent = new Date().toISOString().substr(11,8) + " " + msg;
+  d.appendChild(line);
+  d.scrollTop = d.scrollHeight;
+  console.log(msg);
 }
 
-async function fetchRecs() {
-  const r = await ZOHO.CRM.API.searchRecord({
-    Entity: CONFIG.SUGGESTION_MODULE,
-    Type:   "criteria",
-    Query:  `(${CONFIG.PROGRAM_LOOKUP_FIELD}:equals:${progId})`,
+log("Page loaded", "ok");
+
+try {
+  log("ZOHO object exists: " + (typeof ZOHO !== "undefined"));
+  log("ZOHO.embeddedApp exists: " + (typeof ZOHO?.embeddedApp !== "undefined"));
+
+  ZOHO.embeddedApp.on("PageLoad", function(data) {
+    log("PageLoad fired! Data: " + JSON.stringify(data), "ok");
   });
-  return r?.data || [];
-}
 
-function renderTable(recs) {
-  if (!recs.length) { show("empty"); return; }
-  const ord = {pending:0, accepted:1, declined:2};
-  recs.sort((a,b) => {
-    const sa = (a[CONFIG.FIELDS.status]||"").toLowerCase();
-    const sb = (b[CONFIG.FIELDS.status]||"").toLowerCase();
-    return (ord[sa]??9) - (ord[sb]??9);
-  });
-  const tb = document.getElementById("tbody");
-  tb.innerHTML = "";
-  recs.forEach(r => tb.appendChild(buildRow(r)));
-  show("table");
-}
+  log("Registered PageLoad listener", "ok");
+  ZOHO.embeddedApp.init();
+  log("init() called", "ok");
 
-function buildRow(rec) {
-  const st    = rec[CONFIG.FIELDS.status] || CONFIG.STATUS.pending;
-  const stl   = st.toLowerCase();
-  const isp   = stl === CONFIG.STATUS.pending.toLowerCase();
-  const name  = rec[CONFIG.FIELDS.name]         || "—";
-  const mname = rec[CONFIG.FIELDS.mentor_name]  || "—";
-  const score = rec[CONFIG.FIELDS.score] != null ? rec[CONFIG.FIELDS.score] : "—";
-  const rsn   = rec[CONFIG.FIELDS.reason]       || "—";
-  const stn   = rec[CONFIG.FIELDS.startup_name] || "—";
-  const tr    = document.createElement("tr");
-  tr.dataset.id = rec.id;
-  if (!isp) tr.classList.add("r-" + stl);
-  tr.innerHTML = `
-    <td class="c-chk"><input type="checkbox"/></td>
-    <td class="c-name"><span class="td-name">${esc(name)}</span></td>
-    <td class="c-score td-score">${esc(String(score))}</td>
-    <td class="c-reason td-reason">${esc(rsn)}</td>
-    <td class="c-startup">${esc(stn)}</td>
-    <td class="c-mentor">${esc(mname)}</td>
-    <td class="c-action">${isp
-      ? `<div class="act">
-           <button class="btn-acc" onclick="onAccept('${rec.id}',this)">Accept<span class="btn-spin"></span></button>
-           <button class="btn-arr" onclick="toggleDD(event,'${rec.id}',this)">&#9662;</button>
-         </div>`
-      : `<span class="badge ${stl}">${esc(st)}</span>`
-    }</td>`;
-  return tr;
-}
-
-function toggleDD(e, id, btn) {
-  e.stopPropagation();
-  const menu = document.getElementById("dd");
-  const row  = btn.closest("tr");
-  if (!menu.classList.contains("hidden") && ddRow === row) { closeDD(); return; }
-  ddRow = row;
-  const rc = btn.getBoundingClientRect();
-  menu.style.top  = (rc.bottom + window.scrollY + 2) + "px";
-  menu.style.left = (rc.left + window.scrollX - 60) + "px";
-  menu.classList.remove("hidden");
-  document.getElementById("dd-decline").onclick = ev => {
-    ev.stopPropagation(); closeDD(); onDecline(id, row);
-  };
-}
-function closeDD() { document.getElementById("dd").classList.add("hidden"); ddRow = null; }
-
-function onAccept(id, btn) {
-  const row  = btn.closest("tr");
-  const name = row.querySelector(".td-name")?.textContent || "this mentor";
-  pending = { type:"accept", id, row };
-  openModal({ type:"accept", title:"Accept Suggestion?",
-    body:`Accept <strong>${esc(name)}</strong> as mentor? A mentorship record will be created.`,
-    ok:"Accept" });
-}
-function onDecline(id, row) {
-  const name = row.querySelector(".td-name")?.textContent || "this mentor";
-  pending = { type:"decline", id, row };
-  openModal({ type:"decline", title:"Decline Suggestion?",
-    body:`Decline <strong>${esc(name)}</strong>?`, ok:"Decline" });
-}
-
-async function confirmAction() {
-  if (!pending) return;
-  closeModal();
-  const { type, id, row } = pending;
-  const ab = row.querySelector(".btn-acc");
-  const ar = row.querySelector(".btn-arr");
-  const sp = row.querySelector(".btn-spin");
-  if (ab) { ab.disabled=true; if(sp) sp.style.display="inline-block"; }
-  if (ar) ar.disabled=true;
-  try {
-    if (type==="accept") await doAccept(id, row);
-    else await doDecline(id, row);
-  } catch(e) {
-    toast("error", "Failed: " + (e.message||"Unknown error"));
-    if (ab) { ab.disabled=false; if(sp) sp.style.display="none"; }
-    if (ar) ar.disabled=false;
-  }
-  pending = null;
-}
-
-async function doAccept(id, row) {
-  const sr = await ZOHO.CRM.API.getRecord({ Entity:CONFIG.SUGGESTION_MODULE, RecordID:id });
-  const s  = sr?.data?.[0];
-  if (!s) throw new Error("Could not fetch suggestion.");
-  if (CONFIG.RECORD_MODULE) {
-    const nr = buildRec(s);
-    const cr = await ZOHO.CRM.API.insertRecord({ Entity:CONFIG.RECORD_MODULE, APIData:{data:[nr]} });
-    if (cr?.data?.[0]?.status === "error") throw new Error("Create failed: " + JSON.stringify(cr.data[0].message));
-  }
-  await updStatus(id, CONFIG.STATUS.accepted);
-  updateRow(row, CONFIG.STATUS.accepted);
-  toast("success", "Mentor accepted!");
-}
-
-async function doDecline(id, row) {
-  await updStatus(id, CONFIG.STATUS.declined);
-  updateRow(row, CONFIG.STATUS.declined);
-  toast("error", "Suggestion declined.");
-}
-
-async function updStatus(id, val) {
-  const r = await ZOHO.CRM.API.updateRecord({
-    Entity:  CONFIG.SUGGESTION_MODULE,
-    APIData: { data:[{ id, [CONFIG.FIELDS.status]: val }] },
-  });
-  if (r?.data?.[0]?.status === "error") throw new Error("Status update failed.");
-}
-
-function buildRec(s) {
-  const r = {};
-  Object.entries(CONFIG.RECORD_FIELDS).forEach(([f,t]) => r[f] = resolve(t,s));
-  return r;
-}
-function resolve(t, s) {
-  return t
-    .replace(/\{\{suggestion\.id\}\}/g, s.id||"")
-    .replace(/\{\{program\.id\}\}/g,    progId||"")
-    .replace(/\{\{program\.name\}\}/g,  progName||"")
-    .replace(/\{\{suggestion\.(\w+)\}\}/g, (_,k) => { const f=CONFIG.FIELDS[k]; return f?(s[f]??""):""; });
-}
-
-function updateRow(row, st) {
-  const stl = st.toLowerCase();
-  row.classList.remove("r-accepted","r-declined");
-  row.classList.add("r-"+stl);
-  const ac = row.querySelector(".c-action");
-  if (ac) ac.innerHTML = `<span class="badge ${stl}">${esc(st)}</span>`;
-}
-
-function show(n) {
-  ["s-load","s-empty","s-error","tbl-wrap"].forEach(id => document.getElementById(id).classList.add("hidden"));
-  if (n==="load")  document.getElementById("s-load").classList.remove("hidden");
-  if (n==="empty") document.getElementById("s-empty").classList.remove("hidden");
-  if (n==="error") document.getElementById("s-error").classList.remove("hidden");
-  if (n==="table") document.getElementById("tbl-wrap").classList.remove("hidden");
-}
-
-function showErr(msg) {
-  document.getElementById("err-msg").textContent = msg;
-  show("error");
-}
-
-let tt;
-function toast(type, msg) {
-  const el = document.getElementById("toast");
-  document.getElementById("t-icon").textContent = type==="success"?"✓":"✕";
-  document.getElementById("t-msg").textContent  = msg;
-  el.className = `toast ${type} show`;
-  el.classList.remove("hidden");
-  clearTimeout(tt);
-  tt = setTimeout(() => { el.classList.remove("show"); setTimeout(()=>el.classList.add("hidden"),300); }, 3500);
-}
-
-function openModal({type, title, body, ok}) {
-  document.getElementById("m-title").textContent = title;
-  document.getElementById("m-body").innerHTML    = body;
-  const ic = document.getElementById("m-icon");
-  ic.className   = "m-icon " + type;
-  ic.textContent = type==="accept" ? "✓" : "✕";
-  const ob = document.getElementById("m-ok");
-  ob.className   = "m-btn ok " + type;
-  ob.textContent = ok;
-  document.getElementById("overlay").classList.remove("hidden");
-}
-function closeModal() { document.getElementById("overlay").classList.add("hidden"); }
-
-function esc(s) {
-  const d = document.createElement("div");
-  d.textContent = String(s);
-  return d.innerHTML;
+} catch(e) {
+  log("ERROR: " + e.message, "err");
 }
 </script>
 </body>
